@@ -2,7 +2,6 @@ package govault
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,10 +28,6 @@ func (c *Client) AppRoleLogin(roleid, secretid string) error {
 		return err
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.TLSSkipVerify},
-	}
-	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest(
 		"POST",
 		fmt.Sprintf("%s/v1/auth/approle/login", c.Address),
@@ -42,7 +37,7 @@ func (c *Client) AppRoleLogin(roleid, secretid string) error {
 		return err
 	}
 
-	resp, err := client.Do(req)
+	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -72,19 +67,16 @@ func (c *Client) AppRoleLogin(roleid, secretid string) error {
 		return fmt.Errorf("failed to unmarshal JSON")
 	}
 
-	c.token = clientToken
+	c.Token = clientToken
 	return nil
 }
 
+// Logout revokes Vault token
 func (c *Client) Logout() {
-	if c.token == "" {
+	if c.Token == "" {
 		return
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.TLSSkipVerify},
-	}
-	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest(
 		"POST",
 		fmt.Sprintf("%s/v1/auth/token/revoke-self", c.Address),
@@ -94,8 +86,8 @@ func (c *Client) Logout() {
 		return
 	}
 
-	req.Header.Add("X-Vault-Token", c.token)
-	_, err = client.Do(req)
+	req.Header.Add("X-Vault-Token", c.Token)
+	_, err = c.HttpClient.Do(req)
 	if err != nil {
 		log.Print("Logout failed")
 	}

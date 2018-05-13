@@ -1,7 +1,6 @@
 package govault
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,14 +8,10 @@ import (
 )
 
 func (c *Client) Read(path string, code int) (map[string]interface{}, error) {
-	if c.token == "" {
+	if c.Token == "" {
 		return nil, fmt.Errorf("empty vault token")
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.TLSSkipVerify},
-	}
-	client := &http.Client{Transport: tr}
 	req, err := http.NewRequest(
 		"GET",
 		fmt.Sprintf("%s/v1/%s", c.Address, path),
@@ -26,8 +21,8 @@ func (c *Client) Read(path string, code int) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	req.Header.Add("X-Vault-Token", c.token)
-	resp, err := client.Do(req)
+	req.Header.Add("X-Vault-Token", c.Token)
+	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
