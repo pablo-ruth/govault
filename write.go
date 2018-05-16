@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (c *Client) Write(path string, data map[string]interface{}, code int) error {
+func (c *Client) Write(path string, data map[string]string, code int) error {
 	if c.Token == "" {
 		return fmt.Errorf("empty vault token")
 	}
