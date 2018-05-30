@@ -1,4 +1,4 @@
-package govault
+package vault
 
 import (
 	"bytes"
